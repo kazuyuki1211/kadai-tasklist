@@ -26,11 +26,25 @@ public class IndexServlet extends HttpServlet {
 
         EntityManager em = DBUtil.createEntityManager();
 
-        List<Task> tasks = em.createNamedQuery("getAllTasks", Task.class).getResultList();
+        //開くページ数を取得
+        int page = 1;
+        try {
+            page = Integer.parseInt(request.getParameter("page"));
+            } catch(NumberFormatException e) {}
+
+        List<Task> tasks = em.createNamedQuery("getAllTasks", Task.class)
+                             .setFirstResult(10 * (page - 1))
+                             .setMaxResults(10)
+                             .getResultList();
+
+        long tasks_count = (long)em.createNamedQuery("getTasksCount", Long.class)
+                                   .getSingleResult();
 
         em.close();
 
         request.setAttribute("tasks", tasks);
+        request.setAttribute("tasks_count", tasks_count);
+        request.setAttribute("page", page);
 
         //フラッシュメッセージがセッションスコープにセットされていたら
         if(request.getSession().getAttribute("flush") != null) {
